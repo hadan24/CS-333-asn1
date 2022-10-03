@@ -1,10 +1,13 @@
-// R. Jesse Chaney
-// rchaney@pdx.edu
+// Dan Ha
+// hadan@pdx.edu
 
 #include "vikalloc.h"
 
+// size of data structure node
 #define BLOCK_SIZE (sizeof(mem_block_t))
+// takes ptr to start of block, rets ptr to start of user's data
 #define BLOCK_DATA(__curr) (((void *) __curr) + (BLOCK_SIZE))
+// takes ptr to start of user's data, rets start of data structure data
 #define DATA_BLOCK(__data) ((mem_block_t *) (__data - BLOCK_SIZE))
 
 #define IS_FREE(__curr) ((__curr -> size) == 0)
