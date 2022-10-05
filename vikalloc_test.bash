@@ -1,1 +1,1 @@
-~rchaney~rchaney/Classes/cs333/Labs/Lab1/vikalloc_test.bash
+/u/rchaney/Classes/cs333/Labs/Lab1/vikalloc_test.bash
