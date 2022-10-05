@@ -107,6 +107,10 @@ vikalloc(size_t size)
                 , __LINE__, __FUNCTION__, size);
     }
 
+	// if passed size is 0 or NULL, return NULL
+	if (!size)
+		return NULL;
+
 	// find how many bytes to ask OS for, if needed
 	while (multiplier * min_sbrk_size < mem_needed)
 		++multiplier;
@@ -117,6 +121,9 @@ vikalloc(size_t size)
 		block_list_head = (mem_block_t*) sbrk(mem_requested);
 		low_water_mark = block_list_head;
 		high_water_mark = sbrk(0);
+
+		if (((void*)-1) == high_water_mark)
+			return NULL;
 		
 		block_list_head->capacity = mem_requested - mem_needed;
 		block_list_head->size = size;
@@ -147,6 +154,9 @@ vikalloc(size_t size)
 
 	// if no block w/ enough capacity is found, request more mem
 	curr = (mem_block_t*) sbrk(mem_requested);
+	if (((void*)-1) == curr)
+		return NULL;
+
 	high_water_mark = sbrk(0);
 	curr->capacity = mem_requested - mem_needed;
 	curr->size = size;
