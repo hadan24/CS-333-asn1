@@ -123,7 +123,7 @@ vikalloc(size_t size)
 			return NULL;
 
 		low_water_mark = block_list_head;
-		high_water_mark = sbrk(0);
+		high_water_mark = low_water_mark + mem_requested;
 		block_list_tail = block_list_head;
 
 		block_list_head->capacity = mem_requested - BLOCK_SIZE;
@@ -158,7 +158,7 @@ vikalloc(size_t size)
 	if (((void*) -1) == curr)
 		return NULL;
 
-	high_water_mark = sbrk(0);
+	high_water_mark += mem_requested;
 	curr->capacity = mem_requested - BLOCK_SIZE;
 	curr->size = size;
 	curr->next = NULL;
@@ -173,10 +173,28 @@ vikalloc(size_t size)
 void 
 vikfree(void *ptr)
 {
+	mem_block_t *to_free = DATA_BLOCK(ptr);
+	mem_block_t *next_block = to_free->next;
+	mem_block_t *prev_block = to_free->prev;
+
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
     }
+
+	// mark curr data as free to use
+	to_free->size = 0;
+
+	// if next block is also free, coalesce
+	if (next_block && 0 == next_block->size) {
+		to_free->next = next_block->next;
+		next_block->next->prev = to_free;
+		
+		to_free->capacity += (BLOCK_SIZE + next_block->capacity);
+
+		if (prev_block && 0 == prev_block->prev)
+			vikfree(&(prev_block->data));
+	}
 
     return;
 }
