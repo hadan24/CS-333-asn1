@@ -116,15 +116,15 @@ vikalloc(size_t size)
 		++multiplier;
 	mem_requested = multiplier * min_sbrk_size;
 
-	// for first allocation
+	// the very first allocation
 	if (!block_list_head) {
 		block_list_head = (mem_block_t*) sbrk(mem_requested);
+		if (((void*)-1) == block_list_head)
+			return NULL;
+
 		low_water_mark = block_list_head;
 		high_water_mark = sbrk(0);
 
-		if (((void*)-1) == high_water_mark)
-			return NULL;
-		
 		block_list_head->capacity = mem_requested - mem_needed;
 		block_list_head->size = size;
 		block_list_head->next = block_list_head->prev = NULL;
