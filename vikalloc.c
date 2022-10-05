@@ -183,6 +183,8 @@ vikalloc_reset(void)
             fprintf(vikalloc_log_stream, "*** Resetting all vikalloc space ***\n");
         }
 
+		brk(low_water_mark);
+		high_water_mark = block_list_head = block_list_tail = NULL;
     }
 }
 
