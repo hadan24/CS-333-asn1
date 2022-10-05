@@ -104,22 +104,23 @@ vikalloc(size_t size)
                 , __LINE__, __FUNCTION__, size);
     }
 
-	// find how many bytes to ask for
-	int multiplier = 1;
-	while (multiplier * min_sbrk_size < size + BLOCK_SIZE)
-		++multiplier;
+	/*
+		static mem_block_t *block_list_head = NULL;
+		static mem_block_t *block_list_tail = NULL;
+		static void *low_water_mark = NULL;
+		static void *high_water_mark = NULL;
 
-	// request mem & init data structure
-	size_t mem_requested = multiplier * min_sbrk_size;
-	curr = (mem_block_t*) sbrk(mem_requested);
-	curr->capacity = mem_requested - BLOCK_SIZE;
-	curr->size = size;
-
-	// if low_water_mark hasn't been set yet, then this is first call. Set it
-	if (!low_water_mark) {
-		curr->prev = curr->next = NULL;
-		low_water_mark = curr;
-	}
+		if !head AKA empty list,
+			allocate, set watermarks
+			prev = next = NULL
+		
+		if list exists, traverse to find block w/ enough capacity
+			once found, allocate, wrangle ptrs
+		
+		if no block w/ enough capacity,
+			allocate, reset high watermark
+			next = NULL
+	*/
 
     return BLOCK_DATA(curr);
 }
