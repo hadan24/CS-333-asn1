@@ -97,30 +97,62 @@ vikalloc_set_log(FILE *stream)
 void *
 vikalloc(size_t size)
 {
-    mem_block_t *curr = NULL;
+	int multiplier = 1;
+	size_t mem_needed = size + BLOCK_SIZE;
+	size_t mem_requested = 0;
+	mem_block_t *curr = block_list_head;
 
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry: size = %lu\n"
                 , __LINE__, __FUNCTION__, size);
     }
 
-	/*
-		static mem_block_t *block_list_head = NULL;
-		static mem_block_t *block_list_tail = NULL;
-		static void *low_water_mark = NULL;
-		static void *high_water_mark = NULL;
+	// find how many bytes to ask OS for, if needed
+	while (multiplier * min_sbrk_size < mem_needed)
+		++multiplier;
+	mem_requested = multiplier * min_sbrk_size;
 
-		if !head AKA empty list,
-			allocate, set watermarks
-			prev = next = NULL
+	// for first allocation
+	if (!block_list_head) {
+		block_list_head = (mem_block_t*) sbrk(mem_requested);
+		low_water_mark = block_list_head;
+		high_water_mark = sbrk(0);
 		
-		if list exists, traverse to find block w/ enough capacity
-			once found, allocate, wrangle ptrs
-		
-		if no block w/ enough capacity,
-			allocate, reset high watermark
-			next = NULL
-	*/
+		block_list_head->capacity = mem_requested - mem_needed;
+		block_list_head->size = size;
+		block_list_head->next = block_list_head->prev = NULL;
+		return BLOCK_DATA(block_list_head);
+	}
+
+	// for subsequent allocations, traverse list to find block w/ enough capacity
+	while (curr && curr->capacity < mem_needed)
+		curr = curr->next;
+
+	// if block w/ enough capacity is found, split it
+	if (curr) {
+		mem_block_t *new_block = BLOCK_DATA(curr) + curr->size;
+		new_block->capacity = curr->capacity - mem_needed;
+		new_block->size = size;
+		new_block->next = curr->next;
+		new_block->prev = curr;
+
+		curr->capacity = curr->size;
+		curr->next = new_block;
+
+		if (new_block->next)
+			new_block->next->prev = new_block;
+
+		return BLOCK_DATA(new_block);
+	}
+
+	// if no block w/ enough capacity is found, request more mem
+	curr = (mem_block_t*) sbrk(mem_requested);
+	high_water_mark = sbrk(0);
+	curr->capacity = mem_requested - mem_needed;
+	curr->size = size;
+	curr->next = NULL;
+	curr->prev = block_list_tail;
+	block_list_tail = curr;
 
     return BLOCK_DATA(curr);
 }
