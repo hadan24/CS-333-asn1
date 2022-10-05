@@ -7,7 +7,7 @@
 #define BLOCK_SIZE (sizeof(mem_block_t))
 // takes ptr to start of block, rets ptr to start of user's data
 #define BLOCK_DATA(__curr) (((void *) __curr) + (BLOCK_SIZE))
-// takes ptr to start of user's data, rets start of data structure data
+// takes ptr to start of user's data, rets ptr to start of data structure data
 #define DATA_BLOCK(__data) ((mem_block_t *) (__data - BLOCK_SIZE))
 
 #define IS_FREE(__curr) ((__curr -> size) == 0)
@@ -103,6 +103,23 @@ vikalloc(size_t size)
         fprintf(vikalloc_log_stream, ">> %d: %s entry: size = %lu\n"
                 , __LINE__, __FUNCTION__, size);
     }
+
+	// find how many bytes to ask for
+	int multiplier = 1;
+	while (multiplier * min_sbrk_size < size + BLOCK_SIZE)
+		++multiplier;
+
+	// request mem & init data structure
+	size_t mem_requested = multiplier * min_sbrk_size;
+	curr = (mem_block_t*) sbrk(mem_requested);
+	curr->capacity = mem_requested - BLOCK_SIZE;
+	curr->size = size;
+
+	// if low_water_mark hasn't been set yet, then this is first call. Set it
+	if (!low_water_mark) {
+		curr->prev = curr->next = NULL;
+		low_water_mark = curr;
+	}
 
     return BLOCK_DATA(curr);
 }
