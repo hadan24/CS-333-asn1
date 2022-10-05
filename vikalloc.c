@@ -193,7 +193,7 @@ vikfree(void *ptr)
 		to_free->capacity += (BLOCK_SIZE + next_block->capacity);
 
 		if (prev_block && 0 == prev_block->prev)
-			vikfree(&(prev_block->data));
+			vikfree(&(prev_block->size));
 	}
 
     return;
