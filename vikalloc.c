@@ -97,7 +97,6 @@ vikalloc_set_log(FILE *stream)
 void *
 vikalloc(size_t size)
 {
-	unsigned int multiplier = 1;
 	size_t mem_needed = BLOCK_SIZE + size;
 	size_t mem_requested = 0;
 	mem_block_t *curr = block_list_head;
@@ -112,9 +111,7 @@ vikalloc(size_t size)
 		return NULL;
 
 	// find how many bytes to ask OS for, if needed
-	while ((multiplier * min_sbrk_size) < mem_needed)
-		++multiplier;
-	mem_requested = multiplier * min_sbrk_size;
+	mem_requested = (((size + BLOCK_SIZE) / min_sbrk_size) + 1) * min_sbrk_size;
 
 	// the very first allocation
 	if (!block_list_head) {
@@ -134,8 +131,14 @@ vikalloc(size_t size)
 
 	// for subsequent allocations, traverse list to find block w/ enough capacity
 	// capacity - currSize = available space
-	while (curr && (curr->capacity - curr->size) < mem_needed)
+	while (curr && ((curr->capacity - curr->size) < mem_needed))
 		curr = curr->next;
+
+	// if empty block was found, immediately add
+	if (curr && !(curr->size)) {
+		curr->size = size;
+		return BLOCK_DATA(curr);
+	}
 
 	// if block w/ enough capacity is found, split it
 	if (curr) {
