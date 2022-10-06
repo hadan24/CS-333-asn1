@@ -152,6 +152,8 @@ vikalloc(size_t size)
 		curr->next = new_block;
 		if (new_block->next)
 			new_block->next->prev = new_block;
+		else
+			block_list_tail = new_block
 
 		return BLOCK_DATA(new_block);
 	}
@@ -195,19 +197,19 @@ vikfree(void *ptr)
 	}
 
 	// if next block is also free, coalesce
-	if (next_block && 0 == next_block->size) {
+	if (next_block && !(next_block->size)) {
 		to_free->next = next_block->next;
 
 		if (next_block == block_list_tail)
 			block_list_tail = to_free;
-		else
-			next_block->next->prev = to_free;			
+		else //if (next_block->next)
+			next_block->next->prev = to_free;
 		
 		to_free->capacity += (BLOCK_SIZE + next_block->capacity);
 	}
 
 	// if prev block is also free, recurse down to coalesce up
-	if (prev_block && 0 == prev_block->size)
+	if (prev_block && !(prev_block->size))
 		vikfree(BLOCK_DATA(prev_block));
 
     return;
