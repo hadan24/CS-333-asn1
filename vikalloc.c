@@ -153,7 +153,7 @@ vikalloc(size_t size)
 		if (new_block->next)
 			new_block->next->prev = new_block;
 		else
-			block_list_tail = new_block
+			block_list_tail = new_block;
 
 		return BLOCK_DATA(new_block);
 	}
@@ -192,7 +192,11 @@ vikfree(void *ptr)
 		to_free->size = 0;
 	// if already freed and no need to coalesce, this is double free
 	else if ((next_block && next_block->size) || !next_block) {
-		// print snark
+		if (isVerbose) {
+			fprintf(vikalloc_log_stream, "Block is already free: ptr = " PTR "\n"
+					, (long) (ptr - low_water_mark));
+		}
+		
 		return;
 	}
 
@@ -202,7 +206,7 @@ vikfree(void *ptr)
 
 		if (next_block == block_list_tail)
 			block_list_tail = to_free;
-		else //if (next_block->next)
+		else
 			next_block->next->prev = to_free;
 		
 		to_free->capacity += (BLOCK_SIZE + next_block->capacity);
