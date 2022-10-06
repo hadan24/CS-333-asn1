@@ -182,10 +182,12 @@ vikfree(void *ptr)
 	mem_block_t *next_block = to_free->next;
 	mem_block_t *prev_block = to_free->prev;
 
+	/*
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
-    }
+	}
+	*/
 
 	// mark curr data as free to use
 	if (to_free->size)
