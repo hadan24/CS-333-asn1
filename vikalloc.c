@@ -178,9 +178,17 @@ vikalloc(size_t size)
 void 
 vikfree(void *ptr)
 {
-	mem_block_t *to_free = DATA_BLOCK(ptr);
-	mem_block_t *next_block = to_free->next;
-	mem_block_t *prev_block = to_free->prev;
+	mem_block_t *to_free = NULL;
+	mem_block_t *next_block = NULL;
+	mem_block_t *prev_block = NULL;
+
+	// if null pointer is passed in, immediately return
+	if (!ptr) return;
+	else {
+		to_free = DATA_BLOCK(ptr);
+		next_block = to_free->next;
+		prev_block = to_free->prev;
+	}
 
 	/*
     if (isVerbose) {
@@ -244,12 +252,19 @@ vikalloc_reset(void)
 void *
 vikcalloc(size_t nmemb, size_t size)
 {
-    void *ptr = NULL;
+	size_t arr_size = nmemb * size;
+    void *ptr = vikalloc(arr_size);
+	char *temp = (char*) ptr;
     
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
     }
+
+	if (arr_size > 0) {
+		for (unsigned int i = 0; i < arr_size; ++i)
+			temp[i] = 0;
+	}
 
     return ptr;
 }
