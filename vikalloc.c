@@ -183,18 +183,29 @@ vikfree(void *ptr)
     }
 
 	// mark curr data as free to use
-	to_free->size = 0;
+	if (to_free->size)
+		to_free->size = 0;
+	// if already freed and no need to coalesce, this is double free
+	else if ((next_block && next_block->size) || !next_block) {
+		// print snark
+		return;
+	}
 
 	// if next block is also free, coalesce
 	if (next_block && 0 == next_block->size) {
 		to_free->next = next_block->next;
-		next_block->next->prev = to_free;
+
+		if (next_block == block_list_tail)
+			block_list_tail = to_free;
+		else
+			next_block->next->prev = to_free;			
 		
 		to_free->capacity += (BLOCK_SIZE + next_block->capacity);
-
-		if (prev_block && 0 == prev_block->prev)
-			vikfree(&(prev_block->size));
 	}
+
+	// if prev block is also free, recurse down to coalesce up
+	if (prev_block && 0 == prev_block->size)
+		vikfree(BLOCK_DATA(prev_block));
 
     return;
 }
