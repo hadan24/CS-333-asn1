@@ -294,14 +294,12 @@ vikrealloc(void *ptr, size_t size)
 void *
 vikstrdup(const char *s)
 {
-    void *ptr = NULL;
-
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
     }
 
-    return ptr;
+    return memcpy(vikalloc(strlen(s)+1), s, strlen(s)+1);
 }
 
 #include "vikalloc_dump.c"
