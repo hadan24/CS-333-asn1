@@ -254,19 +254,13 @@ vikcalloc(size_t nmemb, size_t size)
 {
 	size_t arr_size = nmemb * size;
     void *ptr = vikalloc(arr_size);
-	char *temp = (char*) ptr;
     
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
     }
 
-	if (arr_size > 0) {
-		for (unsigned int i = 0; i < arr_size; ++i)
-			temp[i] = 0;
-	}
-
-    return ptr;
+	return memset(ptr, 0, arr_size);
 }
 
 void *
