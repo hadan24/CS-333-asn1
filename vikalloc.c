@@ -266,11 +266,28 @@ vikcalloc(size_t nmemb, size_t size)
 void *
 vikrealloc(void *ptr, size_t size)
 {
+	mem_block_t *ptr_block = DATA_BLOCK(ptr);
+	void *new_block = NULL;
+
     if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
     }
 
+	// if NULL was passed as ptr to old mem, just be vikalloc
+	if (!ptr)
+		return vikalloc(size);
+
+	// if curr block doesn't have enough capacity for new size, allocate new block
+	if (size > ptr_block->capacity) {
+		new_block = vikalloc(size);
+		new_block = memcpy(new_block, ptr, ptr_block->size);
+		vikfree(ptr);
+		return new_block;
+	}
+
+	// otherwise, simply update size
+	ptr_block->size = size;
     return ptr;
 }
 
