@@ -49,7 +49,7 @@ tar: clean
 
 # clean up the compiled files and editor chaff
 clean cls:
-	rm -f $(PROGS) *.o *~ \#*
+	rm -f $(PROGS) *.o *~ *.txt \#*
 
 ci:
 	if [ ! -d RCS ] ; then mkdir RCS; fi

@@ -254,6 +254,8 @@ void *
 vikcalloc(size_t nmemb, size_t size)
 {
 	size_t arr_size = nmemb * size;
+	if (arr_size < nmemb || arr_size < size)
+		return NULL;
     void *ptr = vikalloc(arr_size);
     
     if (isVerbose) {
