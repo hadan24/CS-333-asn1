@@ -246,7 +246,7 @@ vikalloc_reset(void)
         }
 
 		brk(low_water_mark);
-		high_water_mark = block_list_head = block_list_tail = NULL;
+		low_water_mark = high_water_mark = block_list_head = block_list_tail = NULL;
     }
 }
 
