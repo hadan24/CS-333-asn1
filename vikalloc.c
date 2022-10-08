@@ -130,20 +130,20 @@ vikalloc(size_t size)
 	}
 
 	// for subsequent allocations, traverse list to find block w/ enough capacity
-	// capacity - currSize = available space
+	// capacity - currSize = excess space
 	while (curr && ((curr->capacity - curr->size) < mem_needed))
 		curr = curr->next;
 
 	// if empty block was found, immediately add
-	if (curr && !(curr->size)) {
+	if (curr && IS_FREE(curr)) {
 		curr->size = size;
 		return BLOCK_DATA(curr);
 	}
-
+	
 	// if block w/ enough capacity is found, split it
 	if (curr) {
 		mem_block_t *new_block = BLOCK_DATA(curr) + curr->size;
-		new_block->capacity = (curr->capacity - curr->size) - BLOCK_SIZE;
+		new_block->capacity = curr->capacity - (curr->size + BLOCK_SIZE);
 		new_block->size = size;
 		new_block->next = curr->next;
 		new_block->prev = curr;
@@ -181,6 +181,7 @@ vikfree(void *ptr)
 	mem_block_t *to_free = NULL;
 	mem_block_t *next_block = NULL;
 	mem_block_t *prev_block = NULL;
+	int next_block_free = 0;
 
 	// if null pointer is passed in, immediately return
 	if (!ptr) return;
@@ -188,20 +189,19 @@ vikfree(void *ptr)
 		to_free = DATA_BLOCK(ptr);
 		next_block = to_free->next;
 		prev_block = to_free->prev;
+		next_block_free = next_block && !(next_block->size);
 	}
 
-	/*
-    if (isVerbose) {
+	/*if (isVerbose) {
         fprintf(vikalloc_log_stream, ">> %d: %s entry\n"
                 , __LINE__, __FUNCTION__);
-	}
-	*/
+	}*/
 
 	// mark curr data as free to use
 	if (to_free->size)
 		to_free->size = 0;
 	// if already freed and no need to coalesce, this is double free
-	else if ((next_block && next_block->size) || !next_block) {
+	else if (!next_block_free || !next_block) {
 		if (isVerbose) {
 			fprintf(vikalloc_log_stream, "Block is already free: ptr = " PTR "\n"
 					, (long) (ptr - low_water_mark));
@@ -211,7 +211,7 @@ vikfree(void *ptr)
 	}
 
 	// if next block is also free, coalesce
-	if (next_block && !(next_block->size)) {
+	if (next_block_free) {
 		to_free->next = next_block->next;
 
 		if (next_block == block_list_tail)
