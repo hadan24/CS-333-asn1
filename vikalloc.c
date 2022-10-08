@@ -130,32 +130,33 @@ vikalloc(size_t size)
 	}
 
 	// for subsequent allocations, traverse list to find block w/ enough capacity
-	// capacity - currSize = excess space
-	while (curr && ((curr->capacity - curr->size) < mem_needed))
+	while (curr) {
+		// if empty block was found, immediately add
+		if (IS_FREE(curr) && (curr->capacity > size)) {
+			curr->size = size;
+			return BLOCK_DATA(curr);
+		}
+
+		// if nonempty block w/ enough capacity is found, split it
+		// capacity - currSize = excess space
+		if ((curr->capacity - curr->size) > mem_needed) {
+			mem_block_t *new_block = BLOCK_DATA(curr) + curr->size;
+			new_block->capacity = curr->capacity - (curr->size + BLOCK_SIZE);
+			new_block->size = size;
+			new_block->next = curr->next;
+			new_block->prev = curr;
+
+			curr->capacity = curr->size;
+			curr->next = new_block;
+			if (new_block->next)
+				new_block->next->prev = new_block;
+			else
+				block_list_tail = new_block;
+
+			return BLOCK_DATA(new_block);
+		}
+
 		curr = curr->next;
-
-	// if empty block was found, immediately add
-	if (curr && IS_FREE(curr)) {
-		curr->size = size;
-		return BLOCK_DATA(curr);
-	}
-	
-	// if block w/ enough capacity is found, split it
-	if (curr) {
-		mem_block_t *new_block = BLOCK_DATA(curr) + curr->size;
-		new_block->capacity = curr->capacity - (curr->size + BLOCK_SIZE);
-		new_block->size = size;
-		new_block->next = curr->next;
-		new_block->prev = curr;
-
-		curr->capacity = curr->size;
-		curr->next = new_block;
-		if (new_block->next)
-			new_block->next->prev = new_block;
-		else
-			block_list_tail = new_block;
-
-		return BLOCK_DATA(new_block);
 	}
 
 	// if no block w/ enough capacity is found, request more mem
